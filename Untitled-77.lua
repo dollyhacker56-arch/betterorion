@@ -776,25 +776,33 @@ function OrionLib:MakeWindow(WindowConfig)
 		
 OrionLib:SetWindowRefs(MainWindow, MainWindow.FakeMainWindowNew, MainWindow.TopBar, WindowStuff, WatermarkFrame)
 
--- Mouse control - save and restore game state
-local SavedMouseBehavior = Enum.MouseBehavior.Default
-
+-- Mouse control - FORCE unlock when menu is visible, NEVER lock when hidden
 local function SetMouseState(Visible)
+    UserInputService.MouseIconEnabled = Visible
     if Visible then
-        -- Save current state and unlock
-        SavedMouseBehavior = UserInputService.MouseBehavior
-        UserInputService.MouseIconEnabled = true
+        -- Menu open: ALWAYS unlock
         UserInputService.MouseBehavior = Enum.MouseBehavior.Default
     else
-        -- Restore saved state
-        UserInputService.MouseIconEnabled = false
-        UserInputService.MouseBehavior = SavedMouseBehavior
+        -- Menu closed: DON'T lock, just let the game decide
+        -- But keep mouse visible in case of other UI
+        UserInputService.MouseBehavior = Enum.MouseBehavior.Default
     end
 end
 
 SetMouseState(MainWindow.Visible)
 AddConnection(MainWindow:GetPropertyChangedSignal("Visible"), function()
     SetMouseState(MainWindow.Visible)
+end)
+
+-- Also force unlock when toggling with Tab
+AddConnection(UserInputService.InputBegan, function(Input)
+    if Input.KeyCode == WindowConfig.ToggleUIKey then
+        task.wait(0.1) -- Small delay to let the window toggle
+        if MainWindow.Visible then
+            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+            UserInputService.MouseIconEnabled = true
+        end
+    end
 end)
 
 	-- Local window functions
