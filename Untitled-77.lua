@@ -87,6 +87,7 @@ local OrionLib = {
 OrionLib.SectionLabels = {}
 
 -- Mouse unlock system
+-- Mouse unlock system (optimized, no render loop)
 local freeMouse = Instance.new("TextButton")
 freeMouse.Name = "FMouse"
 freeMouse.Size = UDim2.new(0,0,0,0)
@@ -97,21 +98,40 @@ freeMouse.Modal = true
 freeMouse.Visible = false
 
 local mouselock = false
+local savedBehavior = Enum.MouseBehavior.Default
 
 local function UnlockMouse(Value)
 	if Value then
+		savedBehavior = UserInputService.MouseBehavior
 		mouselock = true
-		task.spawn(function() 
-			while mouselock do
-				UserInputService.MouseIconEnabled = Value
-				freeMouse.Visible = Value
-				task.wait()
+		
+		-- Set once, then use UserInputService to intercept
+		UserInputService.MouseIconEnabled = true
+		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		freeMouse.Visible = true
+		
+		-- Only re-apply when something changes
+		local connection
+		connection = UserInputService:GetPropertyChangedSignal("MouseBehavior"):Connect(function()
+			if mouselock and UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default then
+				UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 			end
-			UserInputService.MouseIconEnabled = false
-			freeMouse.Visible = false
 		end)
+		
+		-- Store connection for cleanup
+		rawset(_G, "_orion_mouse_connection", connection)
 	else
 		mouselock = false
+		
+		local conn = rawget(_G, "_orion_mouse_connection")
+		if conn then
+			conn:Disconnect()
+			rawset(_G, "_orion_mouse_connection", nil)
+		end
+		
+		UserInputService.MouseIconEnabled = false
+		UserInputService.MouseBehavior = savedBehavior
+		freeMouse.Visible = false
 	end
 end
 
