@@ -87,7 +87,7 @@ local OrionLib = {
 OrionLib.SectionLabels = {}
 
 -- Mouse unlock system
--- Mouse unlock system (optimized, no render loop)
+-- Mouse unlock system (works for both first and third person)
 local freeMouse = Instance.new("TextButton")
 freeMouse.Name = "FMouse"
 freeMouse.Size = UDim2.new(0,0,0,0)
@@ -96,39 +96,46 @@ freeMouse.Text = ""
 freeMouse.Position = UDim2.new(0,0,0,0)
 freeMouse.Modal = true
 freeMouse.Visible = false
+freeMouse.Parent = Orion
 
 local mouselock = false
 local savedBehavior = Enum.MouseBehavior.Default
+local mouseConnection = nil
 
 local function UnlockMouse(Value)
 	if Value then
+		-- Save current state
 		savedBehavior = UserInputService.MouseBehavior
 		mouselock = true
 		
-		-- Set once, then use UserInputService to intercept
+		-- Unlock immediately
 		UserInputService.MouseIconEnabled = true
 		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 		freeMouse.Visible = true
 		
-		-- Only re-apply when something changes
-		local connection
-		connection = UserInputService:GetPropertyChangedSignal("MouseBehavior"):Connect(function()
-			if mouselock and UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default then
-				UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		-- Force unlock whenever game tries to lock
+		mouseConnection = RunService.RenderStepped:Connect(function()
+			if mouselock then
+				if UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default then
+					UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+				end
+				if not UserInputService.MouseIconEnabled then
+					UserInputService.MouseIconEnabled = true
+				end
+				if not freeMouse.Visible then
+					freeMouse.Visible = true
+				end
 			end
 		end)
-		
-		-- Store connection for cleanup
-		rawset(_G, "_orion_mouse_connection", connection)
 	else
 		mouselock = false
 		
-		local conn = rawget(_G, "_orion_mouse_connection")
-		if conn then
-			conn:Disconnect()
-			rawset(_G, "_orion_mouse_connection", nil)
+		if mouseConnection then
+			mouseConnection:Disconnect()
+			mouseConnection = nil
 		end
 		
+		-- Restore previous state
 		UserInputService.MouseIconEnabled = false
 		UserInputService.MouseBehavior = savedBehavior
 		freeMouse.Visible = false
