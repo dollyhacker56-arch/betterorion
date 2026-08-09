@@ -87,80 +87,55 @@ local OrionLib = {
 OrionLib.SectionLabels = {}
 
 -- Mouse unlock system
--- Mouse unlock system (works for both first and third person)
-local freeMouse = Instance.new("TextButton")
-freeMouse.Name = "FMouse"
-freeMouse.Size = UDim2.new(0,0,0,0)
-freeMouse.BackgroundTransparency = 1
-freeMouse.Text = ""
-freeMouse.Position = UDim2.new(0,0,0,0)
-freeMouse.Modal = true
-freeMouse.Visible = false
-freeMouse.Parent = Orion
-
-local mouselock = false
-local savedBehavior = Enum.MouseBehavior.Default
-local mouseConnection = nil
-
-local function UnlockMouse(Value)
-	if Value then
-		-- Save current state
-		savedBehavior = UserInputService.MouseBehavior
-		mouselock = true
-		
-		-- Unlock immediately
-		UserInputService.MouseIconEnabled = true
-		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-		freeMouse.Visible = true
-		
-		-- Force unlock whenever game tries to lock
-		mouseConnection = RunService.RenderStepped:Connect(function()
-			if mouselock then
-				if UserInputService.MouseBehavior ~= Enum.MouseBehavior.Default then
-					UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-				end
-				if not UserInputService.MouseIconEnabled then
-					UserInputService.MouseIconEnabled = true
-				end
-				if not freeMouse.Visible then
-					freeMouse.Visible = true
-				end
-			end
-		end)
-	else
-		mouselock = false
-		
-		if mouseConnection then
-			mouseConnection:Disconnect()
-			mouseConnection = nil
-		end
-		
-		-- Restore previous state
-		UserInputService.MouseIconEnabled = false
-		UserInputService.MouseBehavior = savedBehavior
-		freeMouse.Visible = false
-	end
-end
 
 -- Icons
-	local Icons = {}
-	local LucideIcons = loadstring(game:HttpGet("https://gitlab.com/m1kp0/BetterOrion/-/raw/main/Icons.lua?ref_type=heads"))().assets
+    local Icons = {}
+    local LucideIcons = loadstring(game:HttpGet("https://gitlab.com/m1kp0/BetterOrion/-/raw/main/Icons.lua?ref_type=heads"))().assets
 
 -- Core
-	local Orion = Instance.new("ScreenGui")
-	Orion.Name = "BetterOrion"
-	if syn then
-		pcall(function() syn.protect_gui(Orion) end)
-		Orion.Parent = game.CoreGui
-	else
-		Orion.Parent = game.CoreGui
-	end
+    local Orion = Instance.new("ScreenGui")
+    Orion.Name = "BetterOrion"
+    if syn then
+        pcall(function() syn.protect_gui(Orion) end)
+        Orion.Parent = game.CoreGui
+    else
+        Orion.Parent = game.CoreGui
+    end
 
-	function OrionLib:IsRunning()
-		return Orion.Parent == game.CoreGui
-	end
--- Setup free mouse button
-freeMouse.Parent = Orion
+    -- Mouse unlock system (ВСТАВЛЯЕМ СЮДА, ПОСЛЕ СОЗДАНИЯ Orion)
+    local freeMouse = Instance.new("TextButton")
+    freeMouse.Name = "FMouse"
+    freeMouse.Size = UDim2.new(0,0,0,0)
+    freeMouse.BackgroundTransparency = 1
+    freeMouse.Text = ""
+    freeMouse.Position = UDim2.new(0,0,0,0)
+    freeMouse.Modal = true
+    freeMouse.Visible = false
+    freeMouse.ZIndex = 999999
+    freeMouse.Parent = Orion  -- <-- Вот тут привязываем к Orion
+
+    local mouselock = false
+
+    local function UnlockMouse(Value)
+        if Value then
+            mouselock = true
+            task.spawn(function()
+                while mouselock do
+                    UserInputService.MouseIconEnabled = true
+                    freeMouse.Visible = true
+                    task.wait()
+                end
+                UserInputService.MouseIconEnabled = false
+                freeMouse.Visible = false
+            end)
+        else
+            mouselock = false
+        end
+    end
+
+-- Local functions
+    local function GetOrionIcon(IconName)
+        -- ...
 -- Local functions
 	local function GetOrionIcon(IconName)
 		if Icons[IconName] ~= nil then return Icons[IconName] else return nil end
@@ -543,6 +518,7 @@ freeMouse.Parent = Orion
 	end
 
 function OrionLib:MakeWindow(WindowConfig)
+    
 	-- Config
 		local Val = {
 			FirstTab = true,
@@ -550,6 +526,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			UIHidden = false,
 			Tab = "",
 			TabholderSize = UDim2.new(0, 120, 0, 200)
+            WindowConfig.FreeMouse = WindowConfig.FreeMouse or false
 		}
 
 		WindowConfig = WindowConfig or {}
@@ -1096,6 +1073,12 @@ end)
 
 			OrionLib.Connections[#OrionLib.Connections+1] =  WatermarkConnection
 		end
+		OrionLib:SetWindowRefs(MainWindow, MainWindow.FakeMainWindowNew, MainWindow.TopBar, WindowStuff, WatermarkFrame)
+
+		-- Enable mouse unlock if configured
+		if WindowConfig.FreeMouse then
+			UnlockMouse(true)
+		end
 
 		local function AddDraggingFunctionality(DragPoint, Main)
 			pcall(function()
@@ -1205,6 +1188,9 @@ end)
 			MainWindow.Visible = false
 			MobileButton.Visible = true
 			Val.UIHidden = true
+             if WindowConfig.FreeMouse then
+        UnlockMouse(false)  -- <-- СЮДА ДОБАВЛЯЕМ
+    end
 			OrionLib:MakeNotification({
 				Name = "Interface Hidden",
 				Content = "Tap "..tostring(WindowConfig.ToggleUIKey):split(".")[3].." to reopen the interface",
@@ -1216,11 +1202,14 @@ end)
 		end)
 
 		AddConnection(UserInputService.InputBegan, function(Input)
-			if Input.KeyCode == WindowConfig.ToggleUIKey then 
-				Val.UIHidden = not Val.UIHidden
-				MainWindow.Visible = not Val.UIHidden 
-			end
-		end)
+    if Input.KeyCode == WindowConfig.ToggleUIKey then 
+        Val.UIHidden = not Val.UIHidden
+        MainWindow.Visible = not Val.UIHidden
+        if WindowConfig.FreeMouse then
+            UnlockMouse(MainWindow.Visible)
+        end
+    end
+end)
 
 		AddConnection(MainWindow.UICorner:GetPropertyChangedSignal("CornerRadius"), function()
 			MainWindow.TopBar.BackgroundImage.UICorner.CornerRadius = MainWindow.UICorner.CornerRadius
