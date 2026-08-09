@@ -86,6 +86,35 @@ local OrionLib = {
 }
 OrionLib.SectionLabels = {}
 
+-- Mouse unlock system
+local freeMouse = Instance.new("TextButton")
+freeMouse.Name = "FMouse"
+freeMouse.Size = UDim2.new(0,0,0,0)
+freeMouse.BackgroundTransparency = 1
+freeMouse.Text = ""
+freeMouse.Position = UDim2.new(0,0,0,0)
+freeMouse.Modal = true
+freeMouse.Visible = false
+
+local mouselock = false
+
+local function UnlockMouse(Value)
+	if Value then
+		mouselock = true
+		task.spawn(function() 
+			while mouselock do
+				UserInputService.MouseIconEnabled = Value
+				freeMouse.Visible = Value
+				task.wait()
+			end
+			UserInputService.MouseIconEnabled = false
+			freeMouse.Visible = false
+		end)
+	else
+		mouselock = false
+	end
+end
+
 -- Icons
 	local Icons = {}
 	local LucideIcons = loadstring(game:HttpGet("https://gitlab.com/m1kp0/BetterOrion/-/raw/main/Icons.lua?ref_type=heads"))().assets
@@ -103,7 +132,8 @@ OrionLib.SectionLabels = {}
 	function OrionLib:IsRunning()
 		return Orion.Parent == game.CoreGui
 	end
-
+-- Setup free mouse button
+freeMouse.Parent = Orion
 -- Local functions
 	local function GetOrionIcon(IconName)
 		if Icons[IconName] ~= nil then return Icons[IconName] else return nil end
