@@ -776,10 +776,20 @@ function OrionLib:MakeWindow(WindowConfig)
 		
 OrionLib:SetWindowRefs(MainWindow, MainWindow.FakeMainWindowNew, MainWindow.TopBar, WindowStuff, WatermarkFrame)
 
--- Mouse control: show cursor and unlock when window is visible
+-- Mouse control - save and restore game state
+local SavedMouseBehavior = Enum.MouseBehavior.Default
+
 local function SetMouseState(Visible)
-    UserInputService.MouseIconEnabled = Visible
-    UserInputService.MouseBehavior = Visible and Enum.MouseBehavior.Default or Enum.MouseBehavior.LockCenter
+    if Visible then
+        -- Save current state and unlock
+        SavedMouseBehavior = UserInputService.MouseBehavior
+        UserInputService.MouseIconEnabled = true
+        UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+    else
+        -- Restore saved state
+        UserInputService.MouseIconEnabled = false
+        UserInputService.MouseBehavior = SavedMouseBehavior
+    end
 end
 
 SetMouseState(MainWindow.Visible)
