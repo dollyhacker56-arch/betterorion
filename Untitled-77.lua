@@ -774,11 +774,17 @@ function OrionLib:MakeWindow(WindowConfig)
 			end
 		end)
 		
-		OrionLib:SetWindowRefs(MainWindow, MainWindow.FakeMainWindowNew, MainWindow.TopBar, WindowStuff, WatermarkFrame)
-        -- Makes Cursor Visible
-        UserInputService.MouseIconEnabled = MainWindow.Visible
+OrionLib:SetWindowRefs(MainWindow, MainWindow.FakeMainWindowNew, MainWindow.TopBar, WindowStuff, WatermarkFrame)
+
+-- Mouse control: show cursor and unlock when window is visible
+local function SetMouseState(Visible)
+    UserInputService.MouseIconEnabled = Visible
+    UserInputService.MouseBehavior = Visible and Enum.MouseBehavior.Default or Enum.MouseBehavior.LockCenter
+end
+
+SetMouseState(MainWindow.Visible)
 AddConnection(MainWindow:GetPropertyChangedSignal("Visible"), function()
-    UserInputService.MouseIconEnabled = MainWindow.Visible
+    SetMouseState(MainWindow.Visible)
 end)
 
 	-- Local window functions
