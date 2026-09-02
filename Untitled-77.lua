@@ -1,12 +1,3 @@
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local CoreGui = game:GetService("CoreGui")
-local PlayerService = game:GetService("Players")
-local UserService = game:GetService("UserService")
-local LocalPlayer = PlayerService.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
 while not game:IsLoaded() do task.wait() end
 for _, UI in ipairs(game.CoreGui:GetChildren()) do
 	if UI.Name == "BetterOrion" then 
@@ -86,56 +77,24 @@ local OrionLib = {
 }
 OrionLib.SectionLabels = {}
 
--- Mouse unlock system
-
 -- Icons
-    local Icons = {}
-    local LucideIcons = loadstring(game:HttpGet("https://gitlab.com/m1kp0/BetterOrion/-/raw/main/Icons.lua?ref_type=heads"))().assets
+	local Icons = {}
+	local LucideIcons = loadstring(game:HttpGet("https://gitlab.com/m1kp0/BetterOrion/-/raw/main/Icons.lua?ref_type=heads"))().assets
 
 -- Core
-    local Orion = Instance.new("ScreenGui")
-    Orion.Name = "BetterOrion"
-    if syn then
-        pcall(function() syn.protect_gui(Orion) end)
-        Orion.Parent = game.CoreGui
-    else
-        Orion.Parent = game.CoreGui
-    end
+	local Orion = Instance.new("ScreenGui")
+	Orion.Name = "BetterOrion"
+	if syn then
+		pcall(function() syn.protect_gui(Orion) end)
+		Orion.Parent = game.CoreGui
+	else
+		Orion.Parent = game.CoreGui
+	end
 
-    -- Mouse unlock system (ВСТАВЛЯЕМ СЮДА, ПОСЛЕ СОЗДАНИЯ Orion)
-    local freeMouse = Instance.new("TextButton")
-    freeMouse.Name = "FMouse"
-    freeMouse.Size = UDim2.new(0,0,0,0)
-    freeMouse.BackgroundTransparency = 1
-    freeMouse.Text = ""
-    freeMouse.Position = UDim2.new(0,0,0,0)
-    freeMouse.Modal = true
-    freeMouse.Visible = false
-    freeMouse.ZIndex = 999999
-    freeMouse.Parent = Orion  -- <-- Вот тут привязываем к Orion
+	function OrionLib:IsRunning()
+		return Orion.Parent == game.CoreGui
+	end
 
-    local mouselock = false
-
-    local function UnlockMouse(Value)
-        if Value then
-            mouselock = true
-            task.spawn(function()
-                while mouselock do
-                    UserInputService.MouseIconEnabled = true
-                    freeMouse.Visible = true
-                    task.wait()
-                end
-                UserInputService.MouseIconEnabled = false
-                freeMouse.Visible = false
-            end)
-        else
-            mouselock = false
-        end
-    end
-
--- Local functions
-    local function GetOrionIcon(IconName)
-        -- ...
 -- Local functions
 	local function GetOrionIcon(IconName)
 		if Icons[IconName] ~= nil then return Icons[IconName] else return nil end
@@ -156,7 +115,7 @@ OrionLib.SectionLabels = {}
 	end
 
 	task.spawn(function()
-		while (OrionLib:IsRunning()) do task.wait() end
+		while (OrionLib:IsRunning()) do wait() end
 		for _, Connection in next, OrionLib.Connections do Connection:Disconnect() end
 	end)
 
@@ -399,7 +358,7 @@ OrionLib.SectionLabels = {}
 	})
 
 	function OrionLib:MakeNotification(NotificationConfig)
-		task.spawn(function()
+		spawn(function()
 			NotificationConfig = NotificationConfig or {}
 			NotificationConfig.Name = NotificationConfig.Name or "Notification Title"
 			NotificationConfig.Content = NotificationConfig.Content or "Notification Content"
@@ -489,25 +448,25 @@ OrionLib.SectionLabels = {}
 				Parent = NotificationFrame,
 			})
 
-			task.spawn(function()
+			spawn(function()
 				TweenService:Create(TimerBar, TweenInfo.new(NotificationConfig.Time - 1, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 2)}):Play()
-				task.wait(NotificationConfig.Time - 1)
+				wait(NotificationConfig.Time - 1)
 				TweenService:Create(TimerBar, TweenInfo.new(0.2, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 0)}):Play()
 				TweenService:Create(TimerBar, TweenInfo.new(0.2, Enum.EasingStyle.Linear), {Position = UDim2.new(0, 30, 0, 0)}):Play()
-				task.wait(0.3)
+				wait(0.3)
 				TimerBar.Visible = false
 			end)
 			TweenService:Create(NotificationFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(0, 30, 0, 0)}):Play()
 
-			task.wait(NotificationConfig.Time - 0.88)
+			wait(NotificationConfig.Time - 0.88)
 			TweenService:Create(NotificationFrame, TweenInfo.new(3, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
 			if NotificationFrame.Icon then TweenService:Create(NotificationFrame.Icon, TweenInfo.new(3, Enum.EasingStyle.Quint), {ImageTransparency = 1}):Play() end
 			TweenService:Create(NotificationFrame.Title, TweenInfo.new(3, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
 			TweenService:Create(NotificationFrame.Content, TweenInfo.new(3, Enum.EasingStyle.Quint), {TextTransparency = 1}):Play()
-			task.wait(0.05)
+			wait(0.05)
 
 			NotificationFrame:TweenPosition(UDim2.new(1, 60, 0, 0),'In','Quint',0.8,true)
-			task.wait(0.85)
+			wait(0.85)
 			NotificationParent:Destroy()
 		end)
 	end    
@@ -518,7 +477,6 @@ OrionLib.SectionLabels = {}
 	end
 
 function OrionLib:MakeWindow(WindowConfig)
-    
 	-- Config
 		local Val = {
 			FirstTab = true,
@@ -526,7 +484,6 @@ function OrionLib:MakeWindow(WindowConfig)
 			UIHidden = false,
 			Tab = "",
 			TabholderSize = UDim2.new(0, 120, 0, 200)
-            WindowConfig.FreeMouse = WindowConfig.FreeMouse or false
 		}
 
 		WindowConfig = WindowConfig or {}
@@ -808,36 +765,7 @@ function OrionLib:MakeWindow(WindowConfig)
 			end
 		end)
 		
-OrionLib:SetWindowRefs(MainWindow, MainWindow.FakeMainWindowNew, MainWindow.TopBar, WindowStuff, WatermarkFrame)
-
--- Mouse control - FORCE unlock when menu is visible, NEVER lock when hidden
-local function SetMouseState(Visible)
-    UserInputService.MouseIconEnabled = Visible
-    if Visible then
-        -- Menu open: ALWAYS unlock
-        UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-    else
-        -- Menu closed: DON'T lock, just let the game decide
-        -- But keep mouse visible in case of other UI
-        UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-    end
-end
-
-SetMouseState(MainWindow.Visible)
-AddConnection(MainWindow:GetPropertyChangedSignal("Visible"), function()
-    SetMouseState(MainWindow.Visible)
-end)
-
--- Also force unlock when toggling with Tab
-AddConnection(UserInputService.InputBegan, function(Input)
-    if Input.KeyCode == WindowConfig.ToggleUIKey then
-        task.wait(0.1) -- Small delay to let the window toggle
-        if MainWindow.Visible then
-            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-            UserInputService.MouseIconEnabled = true
-        end
-    end
-end)
+		OrionLib:SetWindowRefs(MainWindow, MainWindow.FakeMainWindowNew, MainWindow.TopBar, WindowStuff, WatermarkFrame)
 
 	-- Local window functions
 		if WindowConfig.ShowIcon then
@@ -1073,12 +1001,6 @@ end)
 
 			OrionLib.Connections[#OrionLib.Connections+1] =  WatermarkConnection
 		end
-		OrionLib:SetWindowRefs(MainWindow, MainWindow.FakeMainWindowNew, MainWindow.TopBar, WindowStuff, WatermarkFrame)
-
-		-- Enable mouse unlock if configured
-		if WindowConfig.FreeMouse then
-			UnlockMouse(true)
-		end
 
 		local function AddDraggingFunctionality(DragPoint, Main)
 			pcall(function()
@@ -1188,9 +1110,6 @@ end)
 			MainWindow.Visible = false
 			MobileButton.Visible = true
 			Val.UIHidden = true
-             if WindowConfig.FreeMouse then
-        UnlockMouse(false)  -- <-- СЮДА ДОБАВЛЯЕМ
-    end
 			OrionLib:MakeNotification({
 				Name = "Interface Hidden",
 				Content = "Tap "..tostring(WindowConfig.ToggleUIKey):split(".")[3].." to reopen the interface",
@@ -1202,14 +1121,11 @@ end)
 		end)
 
 		AddConnection(UserInputService.InputBegan, function(Input)
-    if Input.KeyCode == WindowConfig.ToggleUIKey then 
-        Val.UIHidden = not Val.UIHidden
-        MainWindow.Visible = not Val.UIHidden
-        if WindowConfig.FreeMouse then
-            UnlockMouse(MainWindow.Visible)
-        end
-    end
-end)
+			if Input.KeyCode == WindowConfig.ToggleUIKey then 
+				Val.UIHidden = not Val.UIHidden
+				MainWindow.Visible = not Val.UIHidden 
+			end
+		end)
 
 		AddConnection(MainWindow.UICorner:GetPropertyChangedSignal("CornerRadius"), function()
 			MainWindow.TopBar.BackgroundImage.UICorner.CornerRadius = MainWindow.UICorner.CornerRadius
@@ -1226,7 +1142,7 @@ end)
 		AddConnection(MinimizeBtn.MouseButton1Up, function()
 			if Val.Minimized then
 				TweenService:Create(MainWindow, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = WindowConfig.Size}):Play()
-				task.spawn(function()
+				spawn(function()
 					WindowSubName.Visible = true
 					TweenService:Create(WindowSubName, TweenInfo.new(0.1), {TextTransparency = 0}):Play()
                     if MainWindow.TopBar:FindFirstChild("SearchBar") then 
@@ -1239,7 +1155,7 @@ end)
 				ResizeTabHolderPoint.Visible = true
 				MinimizeBtn.Ico.Image = "rbxassetid://7072719338"
 				WindowSubName.Visible = true
-				task.wait(.02)
+				wait(.02)
 				MainWindow.ClipsDescendants = false
 				WindowStuff.Visible = true
 				WindowTopBarLine.Visible = true
@@ -1259,19 +1175,19 @@ end)
 				else
 					TweenService:Create(MainWindow, TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(0, WindowName.TextBounds.X + 160, 0, 50)}):Play()
 				end
-				task.spawn(function()
+				spawn(function()
 					TweenService:Create(WindowSubName, TweenInfo.new(0.1), {TextTransparency = 1}):Play()
                     if MainWindow.TopBar:FindFirstChild("SearchBar") then 
                         TweenService:Create(MainWindow.TopBar.SearchBar.TextBox, TweenInfo.new(0.1), {TextTransparency = 1}):Play()
                         TweenService:Create(MainWindow.TopBar.SearchBar.Stroke, TweenInfo.new(0.1), {Transparency = 1}):Play()
                     end
-					task.wait(0.1)
+					wait(0.1)
 					WindowSubName.Visible = false
                     if MainWindow.TopBar:FindFirstChild("SearchBar") then MainWindow.TopBar.SearchBar.Visible = false end
 				end)
 				ResizePoint.Visible = false
 				ResizeTabHolderPoint.Visible = false
-				task.wait(0.1)
+				wait(0.1)
 				WindowStuff.Visible = false
 				for i, Container in pairs(MainWindow:GetChildren()) do
 					if Container.Name == "ItemContainerLeft" or Container.Name == "ItemContainerRight" then
@@ -1307,11 +1223,11 @@ end)
 			})
 
 			TweenService:Create(LoadSequenceLogo, TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageTransparency = 0, Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
-			task.wait(0.8)
+			wait(0.8)
 			TweenService:Create(LoadSequenceLogo, TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -(LoadSequenceText.TextBounds.X/2), 0.5, 0)}):Play()
-			task.wait(0.3)
+			wait(0.3)
 			TweenService:Create(LoadSequenceText, TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
-			task.wait(2)
+			wait(2)
 			TweenService:Create(LoadSequenceText, TweenInfo.new(.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
 			MainWindow.Visible = true
 			LoadSequenceLogo:Destroy()
@@ -4626,7 +4542,7 @@ function OrionLib:LoadAutoloadConfigs()
 	end
 end
 
-function OrionLib:Init()
+function OrionLib:Init() -- ahh orionlib:init() :sob::skull:
 	local Window = game.CoreGui:WaitForChild("BetterOrion", 1):WaitForChild("MainWindow", 1)
 	Window.Visible = true
 end
